@@ -6,6 +6,8 @@ TestPilot AI imports a codebase (GitHub, archive upload, or a bundled demo), ana
 
 > **Honesty by design.** A generated test is never shown as passed until it has executed. Coverage is never estimated. Static findings are labelled *definite* or *potential*, never "confirmed bugs". AI output is always labelled as a suggestion and never overwrites raw test output.
 
+**Live demo:** https://testpilot-frontend.onrender.com — register any account and click *Load demo project*. The public instance runs on Render's free tier: test execution is disabled there (no sandbox on Render), the first visit may take ~1 minute while the server wakes, and data resets when it restarts.
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ---
@@ -33,7 +35,7 @@ TestPilot AI imports a codebase (GitHub, archive upload, or a bundled demo), ana
 | Run comparison (regressions, fixes, coverage & findings deltas) | ✅ Implemented & tested | coverage compared only between runs of the same tool |
 | PDF & HTML QA reports | ✅ Implemented & tested | sections labelled MEASURED / SUGGESTED / LIMITATION |
 | Analytics dashboard | ✅ Implemented | computed from stored records only |
-| Render deployment (Blueprint) | 🟡 Prepared, **not deployed** | execution disabled on Render by design |
+| Render deployment (Blueprint) | ✅ Deployed (free tier) | execution disabled on Render by design; SQLite, data resets on restart |
 
 ## Screenshots
 
@@ -153,7 +155,7 @@ Summary: bcrypt password hashing; JWT revocation on logout; every endpoint enfor
 - Rate limiting is in-memory (per API process).
 - Storage is local disk; on Render free tier it is ephemeral (reports/logs may disappear after redeploys — regenerate).
 - Docker isolation is container-level, not VM-level; not independently audited.
-- Live Render deployment and live GitHub OAuth were **not** tested.
+- Live GitHub OAuth and live AI calls were **not** tested.
 
 ## Roadmap
 

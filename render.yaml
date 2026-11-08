@@ -1,25 +1,20 @@
 # Render Blueprint — TestPilot AI
 # Spec: https://render.com/docs/blueprint-spec
 #
-# Free-tier-first layout: static frontend + API (with an embedded job thread) +
-# PostgreSQL. Test EXECUTION IS DISABLED on Render: Render web services are not
+# Free-tier layout: static frontend + API (with an embedded job thread) using
+# SQLite on the service's ephemeral disk (data resets when the free instance
+# restarts or sleeps). Render allows one free Postgres per workspace; to persist
+# data, add a database and DATABASE_URL (see RENDER_DEPLOYMENT.md).
+# Test EXECUTION IS DISABLED on Render: Render web services are not
 # a sandbox for untrusted code. See RENDER_DEPLOYMENT.md for adding a separate
 # background worker and connecting an external execution provider later.
 #
 # Nothing here contains a secret. Values marked `sync: false` are entered in the
 # Render dashboard during the first Blueprint sync.
 
-databases:
-  - name: testpilot-database
-    plan: free            # free Postgres expires after 30 days — use 0.1c-256mb or larger for anything lasting
-    region: frankfurt
-    databaseName: testpilot
-    user: testpilot
-    ipAllowList: []       # only Render services in the same account/region may connect
-
 services:
   - type: web
-    name: testpilot-api
+    name: testpilot-qa-api
     runtime: python
     plan: free
     region: frankfurt
@@ -37,16 +32,13 @@ services:
         generateValue: true
       - key: TOKEN_ENCRYPTION_KEY
         sync: false        # optional Fernet key; leave empty to derive from SECRET_KEY
-      - key: DATABASE_URL
-        fromDatabase:
-          name: testpilot-database
-          property: connectionString
+      # No DATABASE_URL: SQLite at backend/data/testpilot.db (ephemeral on free instances).
       - key: AUTO_CREATE_TABLES
         value: "false"
       - key: FRONTEND_URL
-        sync: false        # e.g. https://testpilot-frontend.onrender.com
+        value: https://testpilot-frontend.onrender.com
       - key: CORS_ORIGINS
-        sync: false        # same value as FRONTEND_URL
+        value: https://testpilot-frontend.onrender.com
       - key: EXECUTION_PROVIDER
         value: disabled
       - key: RUN_WORKER_IN_API
@@ -89,4 +81,4 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: VITE_API_BASE_URL
-        sync: false        # public build-time value, e.g. https://testpilot-api.onrender.com
+        value: https://testpilot-qa-api.onrender.com   # public build-time value
