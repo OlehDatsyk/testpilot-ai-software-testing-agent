@@ -71,9 +71,26 @@ Performed against the running stack (API + worker with `EXECUTION_PROVIDER=docke
 | Coverage page | ✔ (fixed: "change vs previous" compared a Python run with a JavaScript run — now same-tool only, also in the API comparison) |
 | Screenshots | 14 captured with `scripts/capture-screenshots.mjs` (Playwright-core + Edge) into `docs/screenshots/` |
 
+## Live deployment verification (Render, 2026-11-08)
+
+Against https://testpilot-qa-api.onrender.com and https://testpilot-frontend.onrender.com (free tier, SQLite, execution disabled):
+
+| Check | Result |
+|---|---|
+| `/health/ready` | `{"status":"ready","database":"ok"}` |
+| Register → demo project → analysis | ready; Python + JavaScript detected; Ruff ran; 8 findings |
+| Test generation | succeeded, 15 proposals |
+| Approved test run | `execution_unavailable`, 0 results (no fabricated outcome) |
+| Report | PDF generated and downloaded (`%PDF`) |
+| Assistant | answered from stored data (`grounded-rules`) |
+| CORS | frontend origin allowed; foreign origin gets no CORS header |
+| SPA deep link `/runs/123` | 200 (rewrite rule works) |
+| Frontend bundle | points at `https://testpilot-qa-api.onrender.com`; login page renders, no console errors |
+
+The same configuration was first verified in a clean `python:3.12-slim` container with `ENVIRONMENT=production`.
+
 ## Not tested
 
-* **Live Render deployment** — not performed. `render.yaml` checked against the current Blueprint spec only.
 * **Live GitHub OAuth** with a real OAuth App, and imports from real public/private GitHub repositories over the network (covered only by a mocked GitHub API).
 * **Live Anthropic API calls** — the AI layer was tested with a fake provider; no API key was used.
 * `Start App.bat` and `Start App.command` were not run end-to-end (they open service windows); `Start App.command` passed `bash -n` syntax checking and `scripts/prepare_env.py` was executed.
