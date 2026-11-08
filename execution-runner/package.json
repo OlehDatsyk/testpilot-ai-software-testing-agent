@@ -1,0 +1,9 @@
+{
+  "name": "testpilot-execution-runner",
+  "private": true,
+  "description": "Test tooling bundled into the isolated runner image",
+  "dependencies": {
+    "vitest": "3.2.4",
+    "@vitest/coverage-v8": "3.2.4"
+  }
+}

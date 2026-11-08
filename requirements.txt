@@ -1,0 +1,2 @@
+# Backend runtime dependencies live in backend/requirements.txt
+-r backend/requirements.txt

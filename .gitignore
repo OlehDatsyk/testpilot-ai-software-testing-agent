@@ -1,0 +1,51 @@
+# --- Secrets & local configuration -----------------------------------------
+.env
+.env.*
+!.env.example
+!frontend/.env.example
+*.pem
+*.key
+secrets/
+
+# --- Python -------------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Node / frontend ----------------------------------------------------------
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+.vite/
+
+# --- Application data (never commit user code, logs, reports or databases) ---
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+uploads/
+storage/
+runs/
+reports/
+execution-workspaces/
+testpilot_generated/
+*.log
+logs/
+
+# --- Tooling / OS --------------------------------------------------------------
+.claude/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,92 @@
+# Render Blueprint — TestPilot AI
+# Spec: https://render.com/docs/blueprint-spec
+#
+# Free-tier-first layout: static frontend + API (with an embedded job thread) +
+# PostgreSQL. Test EXECUTION IS DISABLED on Render: Render web services are not
+# a sandbox for untrusted code. See RENDER_DEPLOYMENT.md for adding a separate
+# background worker and connecting an external execution provider later.
+#
+# Nothing here contains a secret. Values marked `sync: false` are entered in the
+# Render dashboard during the first Blueprint sync.
+
+databases:
+  - name: testpilot-database
+    plan: free            # free Postgres expires after 30 days — use 0.1c-256mb or larger for anything lasting
+    region: frankfurt
+    databaseName: testpilot
+    user: testpilot
+    ipAllowList: []       # only Render services in the same account/region may connect
+
+services:
+  - type: web
+    name: testpilot-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Free web services cannot use preDeployCommand; migrations run (idempotently) before start.
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health/ready
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false        # optional Fernet key; leave empty to derive from SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: testpilot-database
+          property: connectionString
+      - key: AUTO_CREATE_TABLES
+        value: "false"
+      - key: FRONTEND_URL
+        sync: false        # e.g. https://testpilot-frontend.onrender.com
+      - key: CORS_ORIGINS
+        sync: false        # same value as FRONTEND_URL
+      - key: EXECUTION_PROVIDER
+        value: disabled
+      - key: RUN_WORKER_IN_API
+        value: "true"
+      - key: DEMO_PROJECT_PATH
+        value: /opt/render/project/src/demo-project
+      - key: STORAGE_ROOT
+        value: /tmp/testpilot-storage   # ephemeral — see RENDER_DEPLOYMENT.md
+      - key: AI_PROVIDER
+        value: none        # set to "anthropic" and provide AI_API_KEY to enable AI features
+      - key: AI_API_KEY
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_REDIRECT_URI
+        sync: false        # https://<api-host>/api/github/oauth/callback
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: testpilot-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_BASE_URL
+        sync: false        # public build-time value, e.g. https://testpilot-api.onrender.com

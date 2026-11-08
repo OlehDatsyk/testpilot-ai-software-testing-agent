@@ -1,0 +1,45 @@
+# Local development stack: PostgreSQL + API + worker.
+# The frontend runs with `npm run dev` (see INSTRUCTION.md).
+#
+# Execution is DISABLED by default here. The worker container deliberately does
+# NOT mount the host Docker socket — mounting it would give untrusted code a path
+# to the host. To enable sandboxed execution locally, run the worker on the host
+# (python -m app.worker with EXECUTION_PROVIDER=docker); see EXECUTION_SECURITY.md.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: testpilot
+      POSTGRES_USER: testpilot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-testpilot-local-only}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testpilot"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql://testpilot:${POSTGRES_PASSWORD:-testpilot-local-only}@db:5432/testpilot
+      AUTO_CREATE_TABLES: "false"
+      EXECUTION_PROVIDER: disabled
+    volumes: [storage:/srv/backend/data]
+    ports: ["8000:8000"]
+    depends_on: { db: { condition: service_healthy } }
+
+  worker:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    command: ["python", "-m", "app.worker"]
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql://testpilot:${POSTGRES_PASSWORD:-testpilot-local-only}@db:5432/testpilot
+      AUTO_CREATE_TABLES: "false"
+      EXECUTION_PROVIDER: disabled
+    volumes: [storage:/srv/backend/data]
+    depends_on: { api: { condition: service_started } }
+
+volumes:
+  pgdata:
+  storage:

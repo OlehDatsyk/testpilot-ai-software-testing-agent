@@ -1,0 +1,21 @@
+[project]
+name = "testpilot-backend"
+version = "1.0.0"
+description = "TestPilot AI — FastAPI backend and background worker"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+norecursedirs = ["data", ".venv", "alembic"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py311"
+extend-exclude = ["data", "alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E9", "F", "B"]
+# B008: FastAPI's dependency-injection idiom (`x = Depends(...)`) is intentional.
+# B905: zip() over AST node lists of equal length by construction.
+ignore = ["B008", "B905"]
